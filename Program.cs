@@ -140,7 +140,6 @@ internal class Repository
     public List<string> Solutions { get; init; } = [];
 }
 
-
 internal class Solution
 {
     public string Name { get; init; } = "";

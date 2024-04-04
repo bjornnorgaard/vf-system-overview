@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Text.RegularExpressions;
 
 var sw = Stopwatch.StartNew();
@@ -70,6 +70,8 @@ foreach (var p in projects)
                   $"project: {p.Name}\n" +
                   $"repository: {p.Repository}\n" +
                   $"dotnet: {p.FrameworkVersion}\n" +
+                  $"tags: \n" +
+                  $"  - project\n" +
                   $"---\n\n" +
                   $"# {p.Name}\n\n" +
                   $"Referenced in solutions: \n\n";
@@ -88,6 +90,8 @@ foreach (var s in solutions)
     var content = $"---\n" +
                   $"solution: {s.Name}\n" +
                   $"repository: {s.Repository}\n" +
+                  $"tags: \n" +
+                  $"  - solution\n" +
                   $"---\n\n" +
                   $"# {s.Name}\n\n" +
                   $"Contains projects: \n\n";
@@ -113,6 +117,8 @@ foreach (var r in repositories)
 {
     var content = $"---\n" +
                   $"repository: {r.Name}\n" +
+                  $"tags: \n" +
+                  $"  - repository\n" +
                   $"---\n\n" +
                   $"# {r.Name}\n\n" +
                   $"Contains solutions: \n\n";

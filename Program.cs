@@ -72,6 +72,7 @@ foreach (var p in projects)
                   $"dotnet: {p.FrameworkVersion}\n" +
                   $"tags: \n" +
                   $"  - project\n" +
+                  $"  - repository/${p.Repository}\n" +
                   $"---\n\n" +
                   $"# {p.Name}\n\n" +
                   $"Referenced in solutions: \n\n";
@@ -82,7 +83,7 @@ foreach (var p in projects)
         content += $"- [[{s.Name}]]\n";
     }
 
-    File.WriteAllText(Path.Combine(downloadsPath, $"{p.Name}.md"), content);
+    File.WriteAllText(Path.Combine(downloadsPath, $"{p.Name} Proj.md"), content);
 }
 
 foreach (var s in solutions)
@@ -92,6 +93,7 @@ foreach (var s in solutions)
                   $"repository: {s.Repository}\n" +
                   $"tags: \n" +
                   $"  - solution\n" +
+                  $"  - repository/${s.Repository}\n" +
                   $"---\n\n" +
                   $"# {s.Name}\n\n" +
                   $"Contains projects: \n\n";
@@ -110,7 +112,7 @@ foreach (var s in solutions)
 
     newRepository.Solutions.Add(s.Name);
 
-    File.WriteAllText(Path.Combine(downloadsPath, $"{Path.GetFileNameWithoutExtension(s.Name)}.md"), content);
+    File.WriteAllText(Path.Combine(downloadsPath, $"{Path.GetFileNameWithoutExtension(s.Name)} Sln.md"), content);
 }
 
 foreach (var r in repositories)
@@ -119,6 +121,7 @@ foreach (var r in repositories)
                   $"repository: {r.Name}\n" +
                   $"tags: \n" +
                   $"  - repository\n" +
+                  $"  - repository/${r.Name}\n" +
                   $"---\n\n" +
                   $"# {r.Name}\n\n" +
                   $"Contains solutions: \n\n";
@@ -128,7 +131,7 @@ foreach (var r in repositories)
         content += $"- [[{solutionName}]]\n";
     }
 
-    File.WriteAllText(Path.Combine(downloadsPath, $"{Path.GetFileNameWithoutExtension(r.Name)}.md"), content);
+    File.WriteAllText(Path.Combine(downloadsPath, $"{Path.GetFileNameWithoutExtension(r.Name)} Repo.md"), content);
 }
 
 Console.WriteLine($"Elapsed time: {sw.ElapsedMilliseconds} ms");

@@ -6,9 +6,12 @@ var sw = Stopwatch.StartNew();
 var repositoryDirectory = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", ".."));
 Console.WriteLine($"Searching directory: {repositoryDirectory}");
 
-var userPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-var downloadsPath = Path.Combine(userPath, "Downloads", "Projects");
-if (!Directory.Exists(downloadsPath)) Directory.CreateDirectory(downloadsPath);
+var outputDirectory = Path.Combine(repositoryDirectory, "flying-circus-docs", "Generated");
+if (!Directory.Exists(outputDirectory)) Directory.CreateDirectory(outputDirectory);
+foreach (var file in Directory.GetFiles(outputDirectory))
+{
+    File.Delete(file);
+}
 
 var projects = new List<Project>();
 var solutions = new List<Solution>();
@@ -20,14 +23,14 @@ var versionSearch = new List<string>
     "<TargetFrameworkVersion>(.*?)</TargetFrameworkVersion>",
 };
 
-foreach (var directory in Directory.GetDirectories(repositoryDirectory))
+foreach (var repository in Directory.GetDirectories(repositoryDirectory))
 {
-    if (!Directory.Exists(Path.Combine(directory, ".git"))) continue;
+    if (!Directory.Exists(Path.Combine(repository, ".git"))) continue;
 
-    var files = Directory.GetFiles(directory, "*.csproj", SearchOption.AllDirectories);
-    foreach (var file in files)
+    var projectFiles = Directory.GetFiles(repository, "*.csproj", SearchOption.AllDirectories);
+    foreach (var project in projectFiles)
     {
-        var projectContent = File.ReadAllText(file);
+        var projectContent = File.ReadAllText(project);
         var detectedVersion = "";
         foreach (var s in versionSearch)
         {
@@ -38,16 +41,17 @@ foreach (var directory in Directory.GetDirectories(repositoryDirectory))
 
         projects.Add(new Project
         {
-            Name = Path.GetFileNameWithoutExtension(file),
-            Repository = directory,
+            Name = Path.GetFileName(project),
+            CleanName = Path.GetFileName(project).PruneCharacters(),
+            Repository = repository,
             FrameworkVersion = detectedVersion,
         });
     }
 
-    files = Directory.GetFiles(directory, "*.sln", SearchOption.AllDirectories);
-    foreach (var file in files)
+    var solutionFiles = Directory.GetFiles(repository, "*.sln", SearchOption.AllDirectories);
+    foreach (var solution in solutionFiles)
     {
-        var solutionContent = File.ReadAllText(file);
+        var solutionContent = File.ReadAllText(solution);
         var projectNames = new List<string>();
         foreach (var p in projects)
         {
@@ -57,8 +61,9 @@ foreach (var directory in Directory.GetDirectories(repositoryDirectory))
 
         solutions.Add(new Solution
         {
-            Name = Path.GetFileNameWithoutExtension(file),
-            Repository = Path.GetFileName(directory),
+            Name = Path.GetFileName(solution),
+            CleanName = Path.GetFileName(solution).PruneCharacters(),
+            Repository = Path.GetFileName(repository),
             Projects = projectNames.ToList(),
         });
     }
@@ -68,11 +73,11 @@ foreach (var p in projects)
 {
     var content = $"---\n" +
                   $"project: {p.Name}\n" +
-                  $"repository: {p.Repository}\n" +
+                  $"repository: {p.Repository.PruneCharacters()}\n" +
                   $"dotnet: {p.FrameworkVersion}\n" +
                   $"tags: \n" +
                   $"  - project\n" +
-                  $"  - repository/${p.Repository}\n" +
+                  $"  - repository/{p.Repository.PruneCharacters()}\n" +
                   $"---\n\n" +
                   $"# {p.Name}\n\n" +
                   $"Referenced in solutions: \n\n";
@@ -80,78 +85,100 @@ foreach (var p in projects)
     foreach (var s in solutions)
     {
         if (!s.Projects.Contains(p.Name)) continue;
-        content += $"- [[{s.Name}]]\n";
+        content += $"- [[{s.CleanName}]]\n";
     }
 
-    File.WriteAllText(Path.Combine(downloadsPath, $"{p.Name} Proj.md"), content);
+    File.WriteAllText(Path.Combine(outputDirectory, $"{p.CleanName}.md"), content);
 }
 
 foreach (var s in solutions)
 {
     var content = $"---\n" +
-                  $"solution: {s.Name}\n" +
-                  $"repository: {s.Repository}\n" +
+                  $"solution: {s.CleanName}\n" +
+                  $"repository: {s.Repository.PruneCharacters()}\n" +
                   $"tags: \n" +
                   $"  - solution\n" +
-                  $"  - repository/${s.Repository}\n" +
+                  $"  - repository/{s.Repository.PruneCharacters()}\n" +
                   $"---\n\n" +
                   $"# {s.Name}\n\n" +
                   $"Contains projects: \n\n";
 
     foreach (var projectName in s.Projects)
     {
-        content += $"- [[{projectName}]]\n";
+        content += $"- [[{projectName.PruneCharacters()}]]\n";
     }
 
     var newRepository = repositories.FirstOrDefault(r => r.Name == s.Repository);
     if (newRepository == null)
     {
-        newRepository = new Repository { Name = s.Repository, Solutions = [] };
+        newRepository = new Repository
+        {
+            Name = s.Repository,
+            CleanName = Path.GetFileName(s.Repository).PruneCharacters(),
+            Solutions = [],
+        };
         repositories.Add(newRepository);
     }
 
     newRepository.Solutions.Add(s.Name);
 
-    File.WriteAllText(Path.Combine(downloadsPath, $"{Path.GetFileNameWithoutExtension(s.Name)} Sln.md"), content);
+    File.WriteAllText(Path.Combine(outputDirectory, $"{s.CleanName}.md"), content);
 }
 
 foreach (var r in repositories)
 {
     var content = $"---\n" +
-                  $"repository: {r.Name}\n" +
+                  $"repository: {r.CleanName}\n" +
                   $"tags: \n" +
                   $"  - repository\n" +
-                  $"  - repository/${r.Name}\n" +
+                  $"  - repository/{r.CleanName}\n" +
                   $"---\n\n" +
                   $"# {r.Name}\n\n" +
                   $"Contains solutions: \n\n";
 
     foreach (var solutionName in r.Solutions)
     {
-        content += $"- [[{solutionName}]]\n";
+        content += $"- [[{solutionName.PruneCharacters()}]]\n";
     }
 
-    File.WriteAllText(Path.Combine(downloadsPath, $"{Path.GetFileNameWithoutExtension(r.Name)} Repo.md"), content);
+    File.WriteAllText(Path.Combine(outputDirectory, $"{r.CleanName}.md"), content);
 }
 
 Console.WriteLine($"Elapsed time: {sw.ElapsedMilliseconds} ms");
 
+public static class StringExtensions
+{
+    public static string PruneCharacters(this string str)
+    {
+        var replace = Regex.Replace(str, "[^a-zA-Z0-9]", "_");
+        if (replace.StartsWith("_"))
+        {
+            replace = replace[1..];
+        }
+
+        return replace.ToLower();
+    }
+}
+
 internal class Project
 {
-    public string Name { get; init; } = "";
-    public string Repository { get; init; } = "";
-    public string FrameworkVersion { get; init; } = "";
+    public required string Name { get; init; } = "";
+    public required string CleanName { get; init; } = "";
+    public required string Repository { get; init; } = "";
+    public required string FrameworkVersion { get; init; } = "";
 }
 
 internal class Repository
 {
-    public string Name { get; init; } = "";
+    public required string Name { get; init; } = "";
+    public required string CleanName { get; init; } = "";
     public List<string> Solutions { get; init; } = [];
 }
 
 internal class Solution
 {
-    public string Name { get; init; } = "";
-    public string Repository { get; init; } = "";
-    public List<string> Projects { get; init; } = [];
+    public required string Name { get; init; } = "";
+    public required string CleanName { get; init; } = "";
+    public required string Repository { get; init; } = "";
+    public required List<string> Projects { get; init; } = [];
 }

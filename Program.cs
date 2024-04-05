@@ -43,8 +43,8 @@ foreach (var repository in Directory.GetDirectories(repositoryDirectory))
         {
             Name = Path.GetFileName(project),
             CleanName = Path.GetFileName(project).PruneCharacters(),
-            Repository = repository,
-            FrameworkVersion = detectedVersion,
+            Repository = Path.GetFileName(repository).PruneCharacters(),
+            FrameworkVersion = detectedVersion.PruneCharacters(),
         });
     }
 
@@ -63,7 +63,7 @@ foreach (var repository in Directory.GetDirectories(repositoryDirectory))
         {
             Name = Path.GetFileName(solution),
             CleanName = Path.GetFileName(solution).PruneCharacters(),
-            Repository = Path.GetFileName(repository),
+            Repository = Path.GetFileName(repository).PruneCharacters(),
             Projects = projectNames.ToList(),
         });
     }
@@ -72,12 +72,13 @@ foreach (var repository in Directory.GetDirectories(repositoryDirectory))
 foreach (var p in projects)
 {
     var content = $"---\n" +
-                  $"project: {p.Name}\n" +
-                  $"repository: {p.Repository.PruneCharacters()}\n" +
-                  $"dotnet: {p.FrameworkVersion}\n" +
+                  // $"project: {p.Name}\n" +
+                  // $"repository: {p.Repository}\n" +
+                  // $"dotnet: {p.FrameworkVersion}\n" +
                   $"tags: \n" +
-                  $"  - project\n" +
-                  $"  - repository/{p.Repository.PruneCharacters()}\n" +
+                  $"  - project/{p.CleanName}\n" +
+                  $"  - repository/{p.Repository}\n" +
+                  $"  - dotnet/{p.FrameworkVersion}\n" +
                   $"---\n\n" +
                   $"# {p.Name}\n\n" +
                   $"Referenced in solutions: \n\n";
@@ -94,11 +95,11 @@ foreach (var p in projects)
 foreach (var s in solutions)
 {
     var content = $"---\n" +
-                  $"solution: {s.CleanName}\n" +
-                  $"repository: {s.Repository.PruneCharacters()}\n" +
+                  // $"solution: {s.CleanName}\n" +
+                  // $"repository: {s.Repository}\n" +
                   $"tags: \n" +
-                  $"  - solution\n" +
-                  $"  - repository/{s.Repository.PruneCharacters()}\n" +
+                  $"  - solution/{s.CleanName}\n" +
+                  $"  - repository/{s.Repository}\n" +
                   $"---\n\n" +
                   $"# {s.Name}\n\n" +
                   $"Contains projects: \n\n";
@@ -128,9 +129,8 @@ foreach (var s in solutions)
 foreach (var r in repositories)
 {
     var content = $"---\n" +
-                  $"repository: {r.CleanName}\n" +
+                  // $"repository: {r.CleanName}\n" +
                   $"tags: \n" +
-                  $"  - repository\n" +
                   $"  - repository/{r.CleanName}\n" +
                   $"---\n\n" +
                   $"# {r.Name}\n\n" +

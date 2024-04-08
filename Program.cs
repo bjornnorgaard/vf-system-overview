@@ -47,7 +47,7 @@ foreach (var repository in Directory.GetDirectories(repositoryDirectory))
             FrameworkVersion = detectedVersion.PruneCharacters(),
         });
     }
-
+    
     var solutionFiles = Directory.GetFiles(repository, "*.sln", SearchOption.AllDirectories);
     foreach (var solution in solutionFiles)
     {
@@ -69,18 +69,29 @@ foreach (var repository in Directory.GetDirectories(repositoryDirectory))
     }
 }
 
+
+var versions = projects.Select(p => p.FrameworkVersion).Distinct().ToList();
+foreach (var version in versions)
+{
+    var content = $"---\n" +
+                  $"tags: \n" +
+                  $"  - dotnet/{version}\n" +
+                  $"---\n\n" +
+                  $"# .NET {version}\n\n";
+    
+    File.WriteAllText(Path.Combine(outputDirectory, $"{version}.md"), content);
+}
+
 foreach (var p in projects)
 {
     var content = $"---\n" +
-                  // $"project: {p.Name}\n" +
-                  // $"repository: {p.Repository}\n" +
-                  // $"dotnet: {p.FrameworkVersion}\n" +
                   $"tags: \n" +
                   $"  - project/{p.CleanName}\n" +
                   $"  - repository/{p.Repository}\n" +
                   $"  - dotnet/{p.FrameworkVersion}\n" +
-                  $"---\n\n" +
+                  $"---\n" +
                   $"# {p.Name}\n\n" +
+                  $"Using [[{p.FrameworkVersion}]].\n\n" +
                   $"Referenced in solutions: \n\n";
 
     foreach (var s in solutions)
@@ -88,19 +99,17 @@ foreach (var p in projects)
         if (!s.Projects.Contains(p.Name)) continue;
         content += $"- [[{s.CleanName}]]\n";
     }
-
+    
     File.WriteAllText(Path.Combine(outputDirectory, $"{p.CleanName}.md"), content);
 }
 
 foreach (var s in solutions)
 {
     var content = $"---\n" +
-                  // $"solution: {s.CleanName}\n" +
-                  // $"repository: {s.Repository}\n" +
                   $"tags: \n" +
                   $"  - solution/{s.CleanName}\n" +
                   $"  - repository/{s.Repository}\n" +
-                  $"---\n\n" +
+                  $"---\n" +
                   $"# {s.Name}\n\n" +
                   $"Contains projects: \n\n";
 
@@ -129,10 +138,9 @@ foreach (var s in solutions)
 foreach (var r in repositories)
 {
     var content = $"---\n" +
-                  // $"repository: {r.CleanName}\n" +
                   $"tags: \n" +
                   $"  - repository/{r.CleanName}\n" +
-                  $"---\n\n" +
+                  $"---\n" +
                   $"# {r.Name}\n\n" +
                   $"Contains solutions: \n\n";
 

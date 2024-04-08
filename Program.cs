@@ -75,20 +75,20 @@ foreach (var version in versions)
 {
     var content = $"---\n" +
                   $"tags: \n" +
-                  $"  - dotnet/{version}\n" +
+                  $"  - dotnet\n" +
                   $"---\n\n" +
                   $"# .NET {version}\n\n";
     
-    File.WriteAllText(Path.Combine(outputDirectory, $"{version}.md"), content);
+    var versionsPath = Path.Combine(outputDirectory, "Frameworks");
+    if (!Directory.Exists(versionsPath)) Directory.CreateDirectory(versionsPath);
+    File.WriteAllText(Path.Combine(versionsPath, $"{version}.md"), content);
 }
 
 foreach (var p in projects)
 {
     var content = $"---\n" +
                   $"tags: \n" +
-                  $"  - project/{p.CleanName}\n" +
-                  $"  - repository/{p.Repository}\n" +
-                  $"  - dotnet/{p.FrameworkVersion}\n" +
+                  $"  - project\n" +
                   $"---\n" +
                   $"# {p.Name}\n\n" +
                   $"Using [[{p.FrameworkVersion}]].\n\n" +
@@ -100,15 +100,16 @@ foreach (var p in projects)
         content += $"- [[{s.CleanName}]]\n";
     }
     
-    File.WriteAllText(Path.Combine(outputDirectory, $"{p.CleanName}.md"), content);
+    var projectsPath = Path.Combine(outputDirectory, "Projects");
+    if (!Directory.Exists(projectsPath)) Directory.CreateDirectory(projectsPath);
+    File.WriteAllText(Path.Combine(projectsPath, $"{p.CleanName}.md"), content);
 }
 
 foreach (var s in solutions)
 {
     var content = $"---\n" +
                   $"tags: \n" +
-                  $"  - solution/{s.CleanName}\n" +
-                  $"  - repository/{s.Repository}\n" +
+                  $"  - solution\n" +
                   $"---\n" +
                   $"# {s.Name}\n\n" +
                   $"Contains projects: \n\n";
@@ -132,14 +133,16 @@ foreach (var s in solutions)
 
     newRepository.Solutions.Add(s.Name);
 
-    File.WriteAllText(Path.Combine(outputDirectory, $"{s.CleanName}.md"), content);
+    var solutionsPath = Path.Combine(outputDirectory, "Solutions");
+    if (!Directory.Exists(solutionsPath)) Directory.CreateDirectory(solutionsPath);
+    File.WriteAllText(Path.Combine(solutionsPath, $"{s.CleanName}.md"), content);
 }
 
 foreach (var r in repositories)
 {
     var content = $"---\n" +
                   $"tags: \n" +
-                  $"  - repository/{r.CleanName}\n" +
+                  $"  - repository\n" +
                   $"---\n" +
                   $"# {r.Name}\n\n" +
                   $"Contains solutions: \n\n";
@@ -149,7 +152,9 @@ foreach (var r in repositories)
         content += $"- [[{solutionName.PruneCharacters()}]]\n";
     }
 
-    File.WriteAllText(Path.Combine(outputDirectory, $"{r.CleanName}.md"), content);
+    var repositoriesPath = Path.Combine(outputDirectory, "Repositories");
+    if (!Directory.Exists(repositoriesPath)) Directory.CreateDirectory(repositoriesPath);
+    File.WriteAllText(Path.Combine(repositoriesPath, $"{r.CleanName}.md"), content);
 }
 
 Console.WriteLine($"Elapsed time: {sw.ElapsedMilliseconds} ms");

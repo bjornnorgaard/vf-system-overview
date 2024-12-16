@@ -1,0 +1,9 @@
+namespace Todos.Library;
+
+public class Todo
+{
+    public required Guid Id { get; set; }
+    public required string Title { get; set; }
+    public required string Description { get; set; }
+    public required bool IsComplete { get; set; }
+}
